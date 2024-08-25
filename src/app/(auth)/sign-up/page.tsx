@@ -12,6 +12,7 @@ import {zodResolver} from '@hookform/resolvers/zod'
 
 import React from 'react'
 import { AuthCredentialsValidator, TAuthCredentialsValidator } from '@/lib/validators/account-credentials'
+import { trpc } from '@/trpc/client'
 
 const Page = () => {
 
@@ -20,8 +21,14 @@ const Page = () => {
     const {register, handleSubmit, formState: {errors} } = useForm<TAuthCredentialsValidator>({
         resolver: zodResolver(AuthCredentialsValidator)
     })
+    
+    const {mutate, isLoading } = trpc.auth.createPayloadUser.useMutation({})
 
     const onSubmit = ({email, password }: TAuthCredentialsValidator) => {
+
+        // send data to the server 
+
+        mutate({email, password})
 
     }
 
@@ -49,7 +56,7 @@ const Page = () => {
 
                         <div className="grid gap-2 py-2">
                             <Label htmlFor='password'>Password</Label>
-                            <Input {...register("password")} className={cn({
+                            <Input {...register("password")} type='password' className={cn({
                                 "focus-visible:ring-violet-500": !errors.password,
                                 "focus-visible:ring-red-500": errors.password,
                             })} 
