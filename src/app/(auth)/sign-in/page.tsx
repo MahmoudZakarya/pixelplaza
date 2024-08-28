@@ -15,36 +15,22 @@ import React from 'react'
 import { AuthCredentialsValidator, TAuthCredentialsValidator } from '@/lib/validators/account-credentials'
 import { trpc } from '@/trpc/client'
 import { ZodError } from 'zod'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 
 const Page = () => {
-
+    const searchParams = useSearchParams()
 
     const router = useRouter()
-   
+    
+    const isSeller = searchParams.get('as') === "seller" 
+    const origin = searchParams.get("origin")
 
     const {register, handleSubmit, formState: {errors} } = useForm<TAuthCredentialsValidator>({
         resolver: zodResolver(AuthCredentialsValidator)
     })
     
-    const {mutate, isLoading } = trpc.auth.createPayloadUser.useMutation({
-        onError: (err)=>{
-            if(err.data?.code === "CONFLICT"){
-                toast.error("This email is already in use. Sign in Instead?")
-                return
-            }
-
-            if(err instanceof ZodError){
-                toast.error(err.issues[0].message)
-                return
-            }
-
-            toast.error("Something went wrong please try again!")
-        },
-        onSuccess: ({sentToEmail})=>{
-            toast.success(`Verifiation email sent to ${sentToEmail}.`)
-            router.push(`/verify-email?to=${sentToEmail}`)
-        }
+    const {mutate, isLoading } = trpc.auth.signIn.useMutation({
+        onSuccess:
     })
 
     const onSubmit = ({email, password }: TAuthCredentialsValidator) => {
@@ -60,8 +46,8 @@ const Page = () => {
         <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px] ">
             <div className="flex flex-col text-center items-center space-y-2">
                 <Icons.logo className='h-20 w-20' />
-                <h1 className='text-2xl font-bold'>Create an account</h1>
-                <Link className={buttonVariants({variant:'link',})} href='/sign-in'>Already have an account? Sign In</Link>
+                <h1 className='text-2xl font-bold'>Sgin in to your account</h1>
+                <Link className={buttonVariants({variant:'link',})} href='/sign-up'>Don&apos;t have an accunt? Sgin Up</Link>
             </div>
 
             <div className="grid gap-6">
@@ -91,9 +77,20 @@ const Page = () => {
                                 <p className='text-sm text-red-500'>{errors.password.message}</p>
                             )}
                         </div>
-                        <Button>Sign Up</Button>
+                        <Button>Sign In</Button>
                     </div>
                 </form>
+
+                <div className="relative">
+                    <div aria-hidden="true" className='absolute inset-0 flex items-center'>
+                        <span className='w-full border-t'/>
+                    </div>
+                    <div className='relative flex justify-center text-xs uppercase'>
+                        <span className='bg-background px-2 text-muted-foreground'>
+                            or
+                        </span>
+                    </div>
+                </div>
             </div>
         </div>
       
