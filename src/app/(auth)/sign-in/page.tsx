@@ -25,19 +25,48 @@ const Page = () => {
     const isSeller = searchParams.get('as') === "seller" 
     const origin = searchParams.get("origin")
 
+
+    const continueAsSeller = ()=>{
+        router.push('?as=seller')
+    }
+
+      const continueAsBuyer = ()=>{
+        router.replace('/sign-in', undefined)
+    }
+
     const {register, handleSubmit, formState: {errors} } = useForm<TAuthCredentialsValidator>({
         resolver: zodResolver(AuthCredentialsValidator)
     })
     
-    const {mutate, isLoading } = trpc.auth.signIn.useMutation({
-        onSuccess:
+    const {mutate: signIn, isLoading } = trpc.auth.signIn.useMutation({
+        onSuccess: () =>{
+             toast.success('Signed in successfully')
+             router.refresh()
+
+             if(origin){
+                router.push(`/${origin}`)
+                return
+             }
+
+             if(isSeller){
+                router.push('/sell')
+                return
+             }
+
+             router.push('/')
+        },
+        onError: (err)=>{
+            if(err?.data?.code === "UNAUTHORIZED"){
+                toast.error("Invalid email or password.")
+            }
+        }
     })
 
     const onSubmit = ({email, password }: TAuthCredentialsValidator) => {
 
         // send data to the server 
 
-        mutate({email, password})
+        signIn({email, password})
 
     }
 
@@ -46,7 +75,7 @@ const Page = () => {
         <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px] ">
             <div className="flex flex-col text-center items-center space-y-2">
                 <Icons.logo className='h-20 w-20' />
-                <h1 className='text-2xl font-bold'>Sgin in to your account</h1>
+                <h1 className='text-2xl font-bold'>Sgin in to your {isSeller? "seller" : ''} account</h1>
                 <Link className={buttonVariants({variant:'link',})} href='/sign-up'>Don&apos;t have an accunt? Sgin Up</Link>
             </div>
 
@@ -91,6 +120,22 @@ const Page = () => {
                         </span>
                     </div>
                 </div>
+
+                {isSeller? (
+                    <Button
+                     onClick={continueAsBuyer} variant="secondary"
+                     disabled={isLoading}
+                    >
+                        Continue as a customer
+                    </Button>
+                ):(
+                    <Button 
+                     onClick={continueAsSeller} variant="secondary"
+                     disabled={isLoading}
+                    >
+                        Continue as a seller
+                    </Button>
+                )}
             </div>
         </div>
       
