@@ -35,13 +35,27 @@ const yourOwnAndPurchased: Access = async ({ req }) => {
     },
   });
 
-  const  purchasedProudectFileIds = orders.map((order)=>{
-    return order.products.map((product)=>{
-        if (typeof product ==="string") return req.payload.logger.error()
-    })
-  })
+  const purchasedProudectFileIds = orders
+    .map((order) => {
+      return order.products.map((product) => {
+        if (typeof product === "string")
+          return req.payload.logger.error(
+            "Search depth not sufficient to find purchased file IDs"
+          );
 
-  const 
+        return typeof product.product_files === "string"
+          ? product.product_files
+          : product.product_files.id;
+      });
+    })
+    .filter(Boolean)
+    .flat();
+
+  return {
+    id: {
+      in: [...ownProductFileIds, ...purchasedProudectFileIds],
+    },
+  };
 };
 
 export const ProductFile: CollectionConfig = {
@@ -54,6 +68,8 @@ export const ProductFile: CollectionConfig = {
   },
   access: {
     read: yourOwnAndPurchased,
+    update: ({ req }) => req.user.role === "Admin",
+    delete: ({ req }) => req.user.role === "Admin",
   },
   upload: {
     staticURL: "/product_files",
