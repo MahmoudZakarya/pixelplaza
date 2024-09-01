@@ -27,13 +27,21 @@ const yourOwnAndPurchased: Access = async ({ req }) => {
 
   const { docs: orders } = await req.payload.find({
     collection: "orders",
-    depth: 0,
+    depth: 2,
     where: {
       user: {
         equals: user.id,
       },
     },
   });
+
+  const  purchasedProudectFileIds = orders.map((order)=>{
+    return order.products.map((product)=>{
+        if (typeof product ==="string") return req.payload.logger.error()
+    })
+  })
+
+  const 
 };
 
 export const ProductFile: CollectionConfig = {
